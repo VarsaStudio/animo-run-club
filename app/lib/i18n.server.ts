@@ -8,9 +8,12 @@ import {
   type LanguageCode,
 } from '~/lib/i18n';
 
-/** Handlers that aren't pages (auth, cart links, discount links, files) keep their URL. */
+/**
+ * Handlers that aren't pages (auth, cart links, discount links, files) keep
+ * their URL, and so does the English-only pre-launch countdown.
+ */
 const NON_PAGE_PATH =
-  /^\/(?:[a-z]{2}-[a-z]{2}\/)?(?:account|cart\/|discount\/|newsletter\/)|\.[a-z0-9]+$/i;
+  /^\/(?:[a-z]{2}-[a-z]{2}\/)?(?:account|cart\/|discount\/|newsletter\/|countdown$)|\.[a-z0-9]+$/i;
 
 /** The language the visitor picked in a switcher, if any. */
 function pickedLanguage(request: Request): LanguageCode | null {
