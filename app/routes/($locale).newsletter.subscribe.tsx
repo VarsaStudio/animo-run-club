@@ -1,26 +1,6 @@
 import {data, Form, useActionData, useNavigation} from 'react-router';
 import type {Route} from './+types/newsletter.subscribe';
-
-/**
- * Storefront API mutation to create a customer record with email marketing consent.
- * Password is generated server-side — this flow is strictly for newsletter signup,
- * not account creation. Customer accounts / logins are handled in separate routes.
- */
-const CUSTOMER_CREATE_MUTATION = `#graphql
-  mutation customerCreate($input: CustomerCreateInput!) {
-    customerCreate(input: $input) {
-      customer {
-        id
-        email
-      }
-      customerUserErrors {
-        field
-        message
-        code
-      }
-    }
-  }
-` as const;
+import {subscribeToNewsletter} from '~/lib/newsletter.server';
 
 type ActionResponse =
   | {success: true; error?: never}
@@ -28,59 +8,13 @@ type ActionResponse =
 
 export async function action({request, context}: Route.ActionArgs) {
   const formData = await request.formData();
-  const email = String(formData.get('email') || '').trim();
+  const result = await subscribeToNewsletter(
+    context.storefront,
+    formData.get('email'),
+  );
 
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return data<ActionResponse>(
-      {error: 'Please enter a valid email address.'},
-      {status: 400},
-    );
-  }
-
-  // Generate a random password since Storefront API requires one for customerCreate.
-  // The user will never see or use this — newsletter signup is passwordless.
-  const password = crypto.randomUUID();
-
-  try {
-    const {customerCreate} = await context.storefront.mutate(
-      CUSTOMER_CREATE_MUTATION,
-      {
-        variables: {
-          input: {
-            email,
-            password,
-            acceptsMarketing: true,
-          },
-        },
-      },
-    );
-
-    const userErrors = customerCreate?.customerUserErrors ?? [];
-
-    if (userErrors.length === 0) {
-      return data<ActionResponse>({success: true});
-    }
-
-    // If the email is already taken, treat it as a soft success.
-    const isAlreadyTaken = userErrors.some(
-      (e: {code?: string}) => e.code === 'TAKEN',
-    );
-
-    if (isAlreadyTaken) {
-      return data<ActionResponse>({success: true});
-    }
-
-    // Any other validation error — surface a friendly message.
-    return data<ActionResponse>(
-      {error: userErrors[0]?.message || 'Something went wrong. Please try again.'},
-      {status: 400},
-    );
-  } catch {
-    return data<ActionResponse>(
-      {error: 'Something went wrong. Please try again.'},
-      {status: 500},
-    );
-  }
+  if (result.success) return data<ActionResponse>({success: true});
+  return data<ActionResponse>({error: result.error}, {status: result.status});
 }
 
 export default function NewsletterSubscribePage() {

@@ -2,6 +2,7 @@ import * as serverBuild from 'virtual:react-router/server-build';
 import {createRequestHandler, storefrontRedirect} from '@shopify/hydrogen';
 import {createHydrogenRouterContext} from '~/lib/context';
 import {getLanguageRedirect, languageCookieRefresh} from '~/lib/i18n.server';
+import {getLaunchLockResponse} from '~/lib/launch.server';
 
 /**
  * Export a fetch handler in module format.
@@ -13,6 +14,10 @@ export default {
     executionContext: ExecutionContext,
   ): Promise<Response> {
     try {
+      // Until the drop, every page sends visitors to the countdown
+      const launchLock = getLaunchLockResponse(request, env);
+      if (launchLock) return launchLock;
+
       // Open pages in the visitor's language (their pick, else their phone's)
       const languageRedirect = getLanguageRedirect(request);
       if (languageRedirect) return languageRedirect;
