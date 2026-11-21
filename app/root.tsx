@@ -20,6 +20,7 @@ import appStyles from '~/styles/app.css?url';
 import tailwindStyles from '~/styles/tailwind.css?url';
 import {PageLayout} from './components/PageLayout';
 import i18n, {localeToLanguage} from '~/i18n/config';
+import {COUNTDOWN_PATH} from '~/lib/launch';
 
 export type RootLoader = typeof loader;
 
@@ -71,6 +72,10 @@ export function links() {
 }
 
 export async function loader(args: Route.LoaderArgs) {
+  // The countdown stands alone: no header, cart or analytics, and no menu or
+  // collection names in the page source that could give the drop away.
+  if (new URL(args.request.url).pathname === COUNTDOWN_PATH) return null;
+
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
