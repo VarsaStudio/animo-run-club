@@ -3,9 +3,14 @@
   "compatibility_date": "2026-05-15",
   "compatibility_flags": ["nodejs_compat"],
   "main": "dist/server/index.js",
+  "vars": {
+    "PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID": "d95f8e28-ed79-4139-9854-a6dfad5b9826",
+    "PUBLIC_CUSTOMER_ACCOUNT_API_URL": "https://shopify.com/67079307470"
+  },
   "assets": {
     "directory": "dist/client",
     "html_handling": "none",
     "not_found_handling": "none"
-  }
+  },
+  "previews": {}
 }
